@@ -1,0 +1,26 @@
+plugins {
+    id 'java'
+    id 'application'
+}
+
+group = 'com.interoperability'
+version = '1.0-SNAPSHOT'
+
+// — Compile against your Java 21 installation —
+java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation "org.openjfx:javafx-controls:20"
+    implementation "org.openjfx:javafx-fxml:20"
+}
+
+application {
+    mainClass = 'hr.java.interoper.clientapp.HelloApplication'
+}

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
+         xmlns:a="http://interoperability.com/aliproduct"
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+
+    <start>
+        <ref name="aliproduct"/>
+    </start>
+
+    <define name="aliproduct">
+        <element name="a:aliproduct">
+            <optional><element name="a:id"><data type="string"/></element></optional>
+            <element name="a:title"><data type="string"/></element>
+            <element name="a:imageUrl"><data type="anyURI"/></element>
+            <element name="a:price"><data type="decimal"/></element>
+            <optional><element name="a:rating"><data type="decimal"/></element></optional>
+        </element>
+    </define>
+
+</grammar>
