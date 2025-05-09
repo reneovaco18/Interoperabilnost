@@ -5,8 +5,9 @@ import com.interoperability.aliexpressproject.security.JwtFilter;
 import org.springframework.context.annotation.*;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.config.Customizer;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.*;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
@@ -14,9 +15,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableWebSecurity
 public class SecurityConfig {
 
-    // 1) Public: permit everything under /auth/**, your upload endpoints, XML-RPC & WSDL
-    @Bean
-    @Order(1)
+    // 1) public (no auth) endpoints
+    @Bean @Order(1)
     public SecurityFilterChain publicChain(HttpSecurity http) throws Exception {
         http
                 .securityMatcher(
@@ -27,30 +27,34 @@ public class SecurityConfig {
                         "/services/**"
                 )
                 .csrf(csrf -> csrf.disable())
-                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
+                .authorizeHttpRequests(a -> a.anyRequest().permitAll())
+                .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
         return http.build();
     }
 
-    // 2) JWT-protected: everything under /api/aliproducts/**
-    @Bean
-    @Order(2)
-    public SecurityFilterChain apiChain(HttpSecurity http,
+    // 2) everything under /api/aliproducts **including** the exact
+    //    /api/aliproducts path (list‐all) now runs through JWTFilter
+    @Bean @Order(2)
+    public SecurityFilterChain jwtChain(HttpSecurity http,
                                         JwtFilter jwtFilter) throws Exception {
         http
-                .securityMatcher("/api/aliproducts/**")
+                .securityMatcher(
+                        "/api/aliproducts",      // exact list‐all
+                        "/api/aliproducts/**"    // get by id, post, put, delete
+                )
                 .csrf(csrf -> csrf.disable())
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
-                .authorizeHttpRequests(auth -> auth.anyRequest().authenticated());
+                .authorizeHttpRequests(a -> a.anyRequest().authenticated())
+                .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
         return http.build();
     }
 
-    // 3) Fallback: any other request → HTTP Basic
-    @Bean
-    @Order(3)
-    public SecurityFilterChain defaultChain(HttpSecurity http) throws Exception {
+    // 3) fallback → HTTP Basic
+    @Bean @Order(3)
+    public SecurityFilterChain fallbackChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
-                .authorizeHttpRequests(auth -> auth.anyRequest().authenticated())
+                .authorizeHttpRequests(a -> a.anyRequest().authenticated())
                 .httpBasic(Customizer.withDefaults());
         return http.build();
     }
