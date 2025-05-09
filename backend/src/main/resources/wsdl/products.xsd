@@ -3,20 +3,19 @@
            targetNamespace="http://interoperability.com/ws"
            elementFormDefault="qualified">
 
-    <!-- request: <ws:getByTitleRequest term="bluetooth"/> -->
     <xs:element name="getByTitleRequest">
         <xs:complexType>
             <xs:attribute name="term" type="xs:string" use="required"/>
         </xs:complexType>
     </xs:element>
 
-    <!-- response: list of <aliproduct> elements PLUS any validation errors -->
     <xs:element name="getByTitleResponse">
         <xs:complexType>
             <xs:sequence>
-                <xs:any  processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+                <!-- ✅ Move specific element ABOVE wildcard -->
                 <xs:element name="validationError" type="xs:string"
                             minOccurs="0" maxOccurs="unbounded"/>
+                <xs:any processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
             </xs:sequence>
         </xs:complexType>
     </xs:element>

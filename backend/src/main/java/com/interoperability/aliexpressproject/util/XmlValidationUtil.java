@@ -10,64 +10,63 @@ import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
 
 @Component
 public class XmlValidationUtil {
 
+    // ← your single-product XSD (place under src/main/resources/xsd/aliproduct.xsd)
     private static final String XSD_PATH = "xsd/aliproduct.xsd";
+
+    // ← your RelaxNG grammar (place under src/main/resources/rng/aliproduct.rng)
     private static final String RNG_PATH = "rng/aliproduct.rng";
 
-    /* Relax‑NG constants */
-    private static final String RNG_NS =
-            "http://relaxng.org/ns/structure/1.0";
-    /**  <-  THIS is the provider class actually shipped in jing‑20091111.jar  */
-    private static final String RNG_FACTORY =
-            "com.thaiopensource.relaxng.jaxp.XMLSyntaxSchemaFactory";  // ← correct
+    private static final String RNG_NS      = "http://relaxng.org/ns/structure/1.0";
+    private static final String RNG_FACTORY = "com.thaiopensource.relaxng.jaxp.XMLSyntaxSchemaFactory";
 
-    /* ------------ public API ------------ */
-
-    public boolean validateAgainstXsd(InputStream xml, List<String> errs) {
-        return validate(xml, errs,
-                SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI),
-                XSD_PATH,
-                "XSD");
-    }
-
-    public boolean validateAgainstRng(InputStream xml, List<String> errs) {
-        return validate(xml, errs,
-                SchemaFactory.newInstance(RNG_NS, RNG_FACTORY,
-                        getClass().getClassLoader()),
-                RNG_PATH,
-                "RNG");
-    }
-
-    /* ------------ internals ------------ */
-
-    private boolean validate(InputStream xml, List<String> errs,
-                             SchemaFactory factory,
-                             String schemaPath,
-                             String tag) {
-
+    /**
+     * Validates the incoming XML stream against either the XSD or RNG.
+     * Returns a (possibly empty) list of error messages.
+     */
+    public List<String> validateXml(InputStream xmlStream, boolean useXsd) {
+        List<String> errors = new ArrayList<>();
         try {
-            Schema schema = factory.newSchema(
-                    new StreamSource(
-                            getClass().getClassLoader()
-                                    .getResourceAsStream(schemaPath)));
-            Validator v = schema.newValidator();
-            v.setErrorHandler(new CollectingHandler(errs));
-            v.validate(new StreamSource(xml));
-            return errs.isEmpty();
+            SchemaFactory factory = useXsd
+                    ? SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI)
+                    : SchemaFactory.newInstance(RNG_NS, RNG_FACTORY, getClass().getClassLoader());
+
+            // pick the correct schema file
+            String schemaPath = useXsd ? XSD_PATH : RNG_PATH;
+            InputStream schemaStream = getClass().getClassLoader().getResourceAsStream(schemaPath);
+            if (schemaStream == null) {
+                errors.add("Cannot load schema from classpath: " + schemaPath);
+                return errors;
+            }
+
+            Schema schema    = factory.newSchema(new StreamSource(schemaStream));
+            Validator validator = schema.newValidator();
+            validator.setErrorHandler(new ErrorHandler() {
+                public void warning(SAXParseException e) { /* ignore */ }
+                public void error(SAXParseException   e) { errors.add(e.getMessage()); }
+                public void fatalError(SAXParseException e) { errors.add(e.getMessage()); }
+            });
+            validator.validate(new StreamSource(xmlStream));
         } catch (Exception ex) {
-            errs.add(tag + " validation failed: " + ex.getMessage());
-            return false;
+            errors.add("Exception during validation: " + ex.getMessage());
         }
+        return errors;
     }
 
-    /* Collect *all* validation problems in one list */
-    private record CollectingHandler(List<String> errs) implements ErrorHandler {
-        @Override public void warning   (SAXParseException e){ errs.add("Warn:  " + e.getMessage()); }
-        @Override public void error     (SAXParseException e){ errs.add("Error: " + e.getMessage()); }
-        @Override public void fatalError(SAXParseException e){ errs.add("Fatal: " + e.getMessage()); }
+    /** Convenience for XSD */
+    public boolean validateAgainstXsd(InputStream xml, List<String> errors) {
+        errors.addAll(validateXml(xml, true));
+        return errors.isEmpty();
+    }
+
+    /** Convenience for RNG */
+    public boolean validateAgainstRng(InputStream xml, List<String> errors) {
+        errors.addAll(validateXml(xml, false));
+        return errors.isEmpty();
     }
 }

@@ -2,7 +2,10 @@ package com.interoperability.aliexpressproject.service;
 
 import com.interoperability.aliexpressproject.model.Aliproduct;
 import com.interoperability.aliexpressproject.util.XmlValidationUtil;
-import jakarta.xml.bind.*;
+import jakarta.xml.bind.JAXBContext;
+import jakarta.xml.bind.JAXBException;
+import jakarta.xml.bind.Marshaller;
+import jakarta.xml.bind.Unmarshaller;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -14,53 +17,52 @@ import java.util.*;
 @Service
 public class AliproductService {
 
+    // ← here’s your single storage dir for both XSD and RNG uploads
     private static final Path DIR = Paths.get("data", "aliproducts");
+
     private final JAXBContext       jaxbCtx;
     private final XmlValidationUtil validator;
 
-    public AliproductService(XmlValidationUtil validator)
-            throws JAXBException, IOException {
+    public AliproductService(XmlValidationUtil validator) throws JAXBException, IOException {
         this.validator = validator;
         this.jaxbCtx   = JAXBContext.newInstance(Aliproduct.class);
+        // create data/aliproducts if not already present:
         Files.createDirectories(DIR);
     }
 
-    /* ---------- public API ---------- */
-
+    /** Called by controller for XSD-based upload */
     public List<String> validateAndSaveXsd(MultipartFile f) throws IOException {
         return validateThenPersist(f, true);
     }
 
+    /** Called by controller for RNG-based upload */
     public List<String> validateAndSaveRng(MultipartFile f) throws IOException {
         return validateThenPersist(f, false);
     }
 
-    /* ---------- internals ---------- */
-
-    private List<String> validateThenPersist(MultipartFile f, boolean xsd) throws IOException {
+    /** Shared logic: validate → unmarshal → set/generate ID → marshal to file */
+    private List<String> validateThenPersist(MultipartFile f, boolean useXsd) throws IOException {
         List<String> errors = new ArrayList<>();
+        // 1) validation
         try (InputStream in = f.getInputStream()) {
-            boolean ok = xsd
+            boolean ok = useXsd
                     ? validator.validateAgainstXsd(in, errors)
                     : validator.validateAgainstRng(in, errors);
-            if (!ok) return errors;            // validation failed – just return errs
+            if (!ok) return errors;
         }
-        return unmarshalAndStore(f);
-    }
 
-    private List<String> unmarshalAndStore(MultipartFile f) throws IOException {
+        // 2) unmarshal, assign/generate ID, save
         try (InputStream in = f.getInputStream()) {
-            Unmarshaller um  = jaxbCtx.createUnmarshaller();
-            Aliproduct p     = (Aliproduct) um.unmarshal(in);
-
-            if (p.getId() == null || p.getId().isBlank()) {
-                p.setId(UUID.randomUUID().toString());
+            Unmarshaller um = jaxbCtx.createUnmarshaller();
+            Aliproduct prod = (Aliproduct) um.unmarshal(in);
+            if (prod.getId() == null || prod.getId().isBlank()) {
+                prod.setId(UUID.randomUUID().toString());
             }
 
-            Path out = DIR.resolve(p.getId() + ".xml");
+            Path out = DIR.resolve(prod.getId() + ".xml");
             Marshaller m = jaxbCtx.createMarshaller();
             m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
-            m.marshal(p, out.toFile());
+            m.marshal(prod, out.toFile());
             return Collections.emptyList();
         } catch (JAXBException ex) {
             return List.of("JAXB error: " + ex.getMessage());

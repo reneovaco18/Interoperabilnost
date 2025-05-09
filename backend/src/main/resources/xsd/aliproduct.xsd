@@ -1,15 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
-           targetNamespace="http://interoperability.com/aliproduct"
-           elementFormDefault="qualified">
-    <xs:element name="aliproduct" type="AliproductType"/>
+<xs:schema
+        xmlns:xs="http://www.w3.org/2001/XMLSchema"
+        xmlns:tns="http://interoperability.com/aliproduct"
+        targetNamespace="http://interoperability.com/aliproduct"
+        elementFormDefault="qualified">
+
+    <!-- now reference the type in the tns namespace -->
+    <xs:element name="aliproduct" type="tns:AliproductType"/>
+
+    <!-- this complexType is automatically in the tns namespace -->
     <xs:complexType name="AliproductType">
         <xs:sequence>
-            <xs:element name="id"        type="xs:string"  minOccurs="0"/>
-            <xs:element name="title"     type="xs:string"/>
-            <xs:element name="imageUrl"  type="xs:anyURI"/>
-            <xs:element name="price"     type="xs:decimal"/>
-            <xs:element name="rating"    type="xs:decimal" minOccurs="0"/>
+            <xs:element name="id"       type="xs:string"   minOccurs="0"/>
+            <xs:element name="title"    type="xs:string"/>
+            <xs:element name="imageUrl" type="xs:anyURI"/>
+            <xs:element name="price"    type="xs:decimal"/>
+            <xs:element name="rating"   type="xs:decimal"  minOccurs="0"/>
         </xs:sequence>
     </xs:complexType>
+
 </xs:schema>
