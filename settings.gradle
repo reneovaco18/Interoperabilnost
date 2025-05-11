@@ -1,2 +1,3 @@
-rootProject.name = 'aliexpressproject'
-include 'backend', 'client-app'
+// settings.gradle (in repo root)
+rootProject.name = "aliexpressproject"
+include "backend", "client-app"

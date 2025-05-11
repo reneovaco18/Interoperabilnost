@@ -37,7 +37,8 @@ public class WeatherServiceImpl implements WeatherService {
 
         // 3) each <Grad>…
         for (Element grad : root.getChildren("Grad")) {
-            String name = grad.getChildText("GradIme");    // correct tag
+            String name = grad.getChildText("GradIme");
+            if (name == null) name = grad.getChildText("Grad");// correct tag
             if (name == null || !name.toLowerCase().contains(lowerTerm)) {
                 continue;
             }
@@ -49,6 +50,7 @@ public class WeatherServiceImpl implements WeatherService {
             if (temp != null) {
                 results.put(name, temp.trim() + "°C");
             }
+            if (temp == null) temp = podaci.getChildText("Temp");
         }
 
         return results;

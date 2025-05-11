@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<TabPane xmlns:fx="http://javafx.com/fxml/1"
+         fx:controller="hr.java.interoper.clientapp.MainController">
+
+    <tabs>
+
+        <!-- 0️⃣ LOGIN / REGISTER -->
+        <Tab text="Login / Register" closable="false">
+            <VBox spacing="8" style="-fx-padding: 20;">
+                <GridPane hgap="5" vgap="5">
+                    <Label text="Username:" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+                    <TextField fx:id="userField" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+
+                    <Label text="Password:" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+                    <PasswordField fx:id="passField" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+                </GridPane>
+
+                <HBox spacing="5">
+                    <Button text="Register" onAction="#handleRegister"
+                            HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                    <Button text="Log in"   onAction="#handleLogin"
+                            HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                </HBox>
+
+                <Label fx:id="loginStatus"/>
+            </VBox>
+        </Tab>
+
+        <!-- 1️⃣ UPLOAD XML -->
+        <Tab text="Upload XML" fx:id="uploadTab" closable="false">
+            <VBox spacing="8" style="-fx-padding: 20;">
+
+                <!-- non‑visual object -->
+                <fx:define>
+                    <ToggleGroup fx:id="schemaToggle"/>
+                </fx:define>
+
+                <HBox spacing="5">
+                    <RadioButton text="Validate with XSD"
+                                 toggleGroup="$schemaToggle" selected="true"/>
+                    <RadioButton text="Validate with RNG"
+                                 toggleGroup="$schemaToggle"/>
+                </HBox>
+
+                <Button text="Pick &amp; Upload File…" onAction="#handleUpload"
+                        maxWidth="Infinity"/>
+                <TextArea fx:id="uploadResult" editable="false" prefRowCount="6"/>
+            </VBox>
+        </Tab>
+
+        <!-- 2️⃣ PRODUCTS CRUD -->
+        <Tab text="Products" fx:id="crudTab" closable="false">
+            <BorderPane style="-fx-padding: 10;">
+
+                <!-- centre -->
+                <center>
+                    <TableView fx:id="table"/>
+                </center>
+
+                <!-- right -->
+                <right>
+                    <VBox spacing="5">
+                        <Button text="Refresh" onAction="#loadAll"       maxWidth="Infinity"/>
+                        <Button text="Add…"    onAction="#showAddDialog" maxWidth="Infinity"/>
+                        <Button text="Edit…"   onAction="#showEditDialog" maxWidth="Infinity"/>
+                        <Button text="Delete"  onAction="#handleDelete"  maxWidth="Infinity"/>
+                        <Button text="Seed 20 demo products"
+                                onAction="#handleSeed"
+                                maxWidth="Infinity"/>
+                    </VBox>
+                </right>
+
+
+            </BorderPane>
+        </Tab>
+
+        <!-- 3️⃣ SOAP SEARCH -->
+        <Tab text="Search (SOAP)" closable="false">
+            <VBox spacing="8" style="-fx-padding: 20;">
+                <HBox spacing="5">
+                    <TextField fx:id="searchField" promptText="substring of title"/>
+                    <Button text="Search" onAction="#handleSoapSearch"/>
+                </HBox>
+                <TextArea fx:id="soapResult" editable="false" prefRowCount="12"/>
+            </VBox>
+        </Tab>
+
+        <!-- 4️⃣ WEATHER -->
+        <Tab text="Weather (XML‑RPC)" closable="false">
+            <VBox spacing="8" style="-fx-padding: 20;">
+                <HBox spacing="5">
+                    <TextField fx:id="cityField" promptText="city or part of name"/>
+                    <Button text="Fetch" onAction="#handleWeather"/>
+                </HBox>
+                <TextArea fx:id="weatherArea" editable="false" prefRowCount="10"/>
+            </VBox>
+        </Tab>
+
+    </tabs>
+</TabPane>

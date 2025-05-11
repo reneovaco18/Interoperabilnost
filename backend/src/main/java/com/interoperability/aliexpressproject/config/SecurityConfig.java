@@ -11,11 +11,16 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.*;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+/**
+ * Three chains:
+ *  1. everything under /auth/**, the XML upload endpoints, SOAP (/services/**) and XML‑RPC (/xmlrpc) = PUBLIC
+ *  2. /api/aliproducts … = JWT protected
+ *  3. everything else falls back to HTTP Basic (mostly actuator / H2 console etc.)
+ */
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
-    // 1) public (no auth) endpoints
     @Bean @Order(1)
     public SecurityFilterChain publicChain(HttpSecurity http) throws Exception {
         http
@@ -24,24 +29,21 @@ public class SecurityConfig {
                         "/api/aliproducts/upload/xsd",
                         "/api/aliproducts/upload/rng",
                         "/xmlrpc",
-                        "/services/**"
+                        "/services/**",
+                        "/admin/seed"
                 )
+
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(a -> a.anyRequest().permitAll())
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
         return http.build();
     }
 
-    // 2) everything under /api/aliproducts **including** the exact
-    //    /api/aliproducts path (list‐all) now runs through JWTFilter
     @Bean @Order(2)
     public SecurityFilterChain jwtChain(HttpSecurity http,
                                         JwtFilter jwtFilter) throws Exception {
         http
-                .securityMatcher(
-                        "/api/aliproducts",      // exact list‐all
-                        "/api/aliproducts/**"    // get by id, post, put, delete
-                )
+                .securityMatcher("/api/aliproducts", "/api/aliproducts/**")
                 .csrf(csrf -> csrf.disable())
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(a -> a.anyRequest().authenticated())
@@ -49,7 +51,6 @@ public class SecurityConfig {
         return http.build();
     }
 
-    // 3) fallback → HTTP Basic
     @Bean @Order(3)
     public SecurityFilterChain fallbackChain(HttpSecurity http) throws Exception {
         http

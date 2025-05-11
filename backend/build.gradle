@@ -28,7 +28,11 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web-services'   // SOAP (Spring-WS)
     implementation 'org.springframework.boot:spring-boot-starter-security'       // Basic-Auth → later JWT
 
+    // build.gradle of the backend module
+    implementation 'org.apache.httpcomponents.client5:httpclient5-fluent:5.2.1'   // <‑‑ you call Request.get(…)
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.3'
 
+    implementation 'org.springframework.security:spring-security-crypto:6.1.2'
 
     /* ── WebClient & XML parsing ─────────────────────────────────── */
     implementation 'org.springframework.boot:spring-boot-starter-webflux'  // for RapidAPI HTTP + reactive stack
