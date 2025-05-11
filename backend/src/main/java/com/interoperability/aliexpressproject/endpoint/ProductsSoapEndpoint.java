@@ -8,14 +8,19 @@ import org.xml.sax.InputSource;
 
 import javax.xml.XMLConstants;
 import javax.xml.namespace.NamespaceContext;
-import javax.xml.parsers.*;
-import javax.xml.transform.stream.StreamSource;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.xpath.*;
 import java.io.ByteArrayInputStream;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * SOAP endpoint  –  GET /services  (payload‑style)
+ * Expects   &lt;ws:getByTitleRequest term="something"/&gt;
+ * Returns   &lt;ws:getByTitleResponse&gt;...matches...&lt;/ws:getByTitleResponse&gt;
+ */
 @Endpoint
 public class ProductsSoapEndpoint {
 
@@ -35,45 +40,61 @@ public class ProductsSoapEndpoint {
         xpath.setNamespaceContext(new SimpleNs("a", PROD_NS));
     }
 
+    /* ───────────────────────────────  MAIN  ───────────────────────────── */
+
     @PayloadRoot(namespace = WS_NS, localPart = "getByTitleRequest")
     @ResponsePayload
     public Element handle(@RequestPayload Element req) throws Exception {
-        String term = req.getAttribute("term").toLowerCase();
-        String xml  = aggregator.buildXml();
 
-        // 1) validate the full <products> document against XSD
+        /* 0) read & sanitise the search term */
+        String term = req.getAttribute("term");
+        term = term == null ? "" : term.trim().toLowerCase();
+
+        /* 1) aggregate all <aliproduct> XML and validate against XSD */
+        String xml = aggregator.buildXml();
+
         List<String> validationErrs = new ArrayList<>();
         try (var in = new ByteArrayInputStream(xml.getBytes())) {
             validator.validateAgainstXsd(in, validationErrs);
         }
 
-        // 2) parse into DOM
+        /* 2) parse aggregated XML into DOM */
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
         dbf.setNamespaceAware(true);
-        DocumentBuilder db = dbf.newDocumentBuilder();
-        Document fullDoc = db.parse(new InputSource(new StringReader(xml)));
+        DocumentBuilder db   = dbf.newDocumentBuilder();
+        Document fullDoc     = db.parse(new InputSource(new StringReader(xml)));
 
-        // 3) XPath filter: case-insensitive match on <title>
-        String exprStr =
-                "//a:aliproduct[" +
-                        "contains(" +
-                        "translate(a:title,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz')," +
-                        "'" + term + "')" +
-                        "]";
-        XPathExpression expr = xpath.compile(exprStr);
-        NodeList matches = (NodeList) expr.evaluate(fullDoc, XPathConstants.NODESET);
+        /* 3) collect matching nodes */
+        NodeList hits;
+        if (term.isEmpty()) {                                // blank term → return all
+            hits = (NodeList) xpath.evaluate(
+                    "//a:aliproduct", fullDoc, XPathConstants.NODESET);
+        } else {
+            /* escape single quotes in user input for XPath literal */
+            String xsafe = term.replace("'", "''");
+            String exprStr =
+                    "//a:aliproduct[" +
+                            "contains(" +
+                            "translate(a:title," +
+                            "'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz')," +
+                            "'" + xsafe + "')" +
+                            "]";
+            hits = (NodeList) xpath.compile(exprStr)
+                    .evaluate(fullDoc, XPathConstants.NODESET);
+        }
 
-        // 4) build response
+        /* 4) build <getByTitleResponse> */
         Document respDoc = db.newDocument();
-        Element resp = respDoc.createElementNS(WS_NS, "getByTitleResponse");
+        Element  resp    = respDoc.createElementNS(WS_NS, "getByTitleResponse");
+        resp.setAttribute("xmlns:a", PROD_NS);          // declare product namespace once
         respDoc.appendChild(resp);
 
-        // append each matching <aliproduct>
-        for (int i = 0; i < matches.getLength(); i++) {
-            Node node = matches.item(i);
-            resp.appendChild(respDoc.importNode(node, true));
+        /* 4a) append matching <aliproduct> elements */
+        for (int i = 0; i < hits.getLength(); i++) {
+            resp.appendChild(respDoc.importNode(hits.item(i), true));
         }
-        // append any XSD validation errors
+
+        /* 4b) append any XSD validation errors */
         for (String err : validationErrs) {
             Element ve = respDoc.createElementNS(WS_NS, "validationError");
             ve.setTextContent(err);
@@ -83,15 +104,16 @@ public class ProductsSoapEndpoint {
         return resp;
     }
 
-    // tiny NamespaceContext for our XPath
+    /* ────────────────────────  helper for XPath NS  ───────────────────── */
+
     private static record SimpleNs(String prefix, String uri) implements NamespaceContext {
-        @Override public String getNamespaceURI(String p) {
+        @Override public String getNamespaceURI(String p)           {
             return prefix.equals(p) ? uri : XMLConstants.NULL_NS_URI;
         }
-        @Override public String getPrefix(String namespaceURI){
+        @Override public String getPrefix(String namespaceURI)      {
             return uri.equals(namespaceURI) ? prefix : null;
         }
-        @Override public java.util.Iterator<String> getPrefixes(String namespaceURI){
+        @Override public java.util.Iterator<String> getPrefixes(String namespaceURI) {
             return java.util.Collections.singletonList(prefix).iterator();
         }
     }

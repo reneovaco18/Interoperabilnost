@@ -42,46 +42,59 @@ public class DataSeeder {
     public DataSeeder() throws Exception { Files.createDirectories(DIR); }
 
     /** returns the list of product‑IDs that were **actually** stored */
+    /** returns the list of product‑IDs that were **actually** stored */
     public List<String> seed() throws Exception {
-        List<String> saved = new ArrayList<>();
 
-        int idx = 0;
-        for (String id : IDS) {
+        List<String> saved = new ArrayList<>();
+        int          idx   = 0;
+
+        for (String aliId : IDS) {
             idx++;
             boolean useXsd = idx <= 10;
-            System.out.println("▶ Fetch "+id+" ("+(useXsd?"XSD":"RNG")+")");
+            System.out.printf("▶ Fetch %s (%s)%n", aliId, useXsd ? "XSD" : "RNG");
 
-            String json = Request.get("https://"+RAPID_HOST+"/item_detail_2?itemId="+id)
-                    .addHeader("X-RapidAPI-Key",  KEY)
-                    .addHeader("X-RapidAPI-Host", RAPID_HOST)
-                    .addHeader("Accept", "application/json")
-                    .connectTimeout(Timeout.ofSeconds(15))
-                    .responseTimeout(Timeout.ofSeconds(15))
-                    .execute().returnContent().asString();
+            /* 1) call RapidAPI ------------------------------------------------ */
+            String json;
+            try {
+                json = Request.get("https://" + RAPID_HOST + "/item_detail_2?itemId=" + aliId)
+                        .addHeader("X-RapidAPI-Key",  KEY)
+                        .addHeader("X-RapidAPI-Host", RAPID_HOST)
+                        .addHeader("Accept", "application/json")
+                        .connectTimeout(Timeout.ofSeconds(15))
+                        .responseTimeout(Timeout.ofSeconds(15))
+                        .execute().returnContent().asString();
+            } catch (org.apache.hc.client5.http.HttpResponseException http) {
+                System.out.printf("  ⚠  skipped – RapidAPI returned %d %s%n",
+                        http.getStatusCode(), http.getReasonPhrase());
+                continue;                         // just skip this ID
+            }
 
+            /* 2) map → Aliproduct, validate, save ----------------------------- */
             Aliproduct p = mapJson(json);
 
-            // marshal → byte[]
+            /* marshal → byte[] */
             var bout = new java.io.ByteArrayOutputStream();
             Marshaller m = jaxb.createMarshaller();
             m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
             m.marshal(p, bout);
             byte[] xml = bout.toByteArray();
 
+            /* XSD/RNG validation */
             boolean ok;
             try (var in = new java.io.ByteArrayInputStream(xml)) {
                 ok = useXsd
                         ? validator.validateAgainstXsd(in, new ArrayList<>())
                         : validator.validateAgainstRng(in, new ArrayList<>());
             }
-            if (!ok) { System.out.println("  💥 validation failed"); continue; }
+            if (!ok) { System.out.println("  💥 validation failed → skipped"); continue; }
 
-            Files.write(DIR.resolve(p.getId()+".xml"), xml);
+            Files.write(DIR.resolve(p.getId() + ".xml"), xml);
             saved.add(p.getId());
-            System.out.println("  ✅ saved");
+            System.out.println("  ✅ saved");
         }
         return saved;
     }
+
 
     /* helper ─────────────────────────────────────────────── */
     private Aliproduct mapJson(String json) throws Exception {

@@ -63,15 +63,17 @@
                 <!-- right -->
                 <right>
                     <VBox spacing="5">
-                        <Button text="Refresh" onAction="#loadAll"       maxWidth="Infinity"/>
-                        <Button text="Add…"    onAction="#showAddDialog" maxWidth="Infinity"/>
-                        <Button text="Edit…"   onAction="#showEditDialog" maxWidth="Infinity"/>
-                        <Button text="Delete"  onAction="#handleDelete"  maxWidth="Infinity"/>
+                        <Button text="Refresh"        onAction="#loadAll"       maxWidth="Infinity"/>
+                        <Button text="Find by ID…"    onAction="#showFindDialog" maxWidth="Infinity"/>
+                        <Button text="Add…"           onAction="#showAddDialog" maxWidth="Infinity"/>
+                        <Button text="Edit…"          onAction="#showEditDialog" maxWidth="Infinity"/>
+                        <Button text="Delete"         onAction="#handleDelete"  maxWidth="Infinity"/>
                         <Button text="Seed 20 demo products"
                                 onAction="#handleSeed"
                                 maxWidth="Infinity"/>
                     </VBox>
                 </right>
+
 
 
             </BorderPane>
@@ -95,6 +97,8 @@
                     <TextField fx:id="cityField" promptText="city or part of name"/>
                     <Button text="Fetch" onAction="#handleWeather"/>
                 </HBox>
+                <TextField fx:id="tempField" editable="false" promptText="parsed temperature"/>
+
                 <TextArea fx:id="weatherArea" editable="false" prefRowCount="10"/>
             </VBox>
         </Tab>
