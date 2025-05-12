@@ -7,7 +7,7 @@
 
     <tabs>
 
-        <!-- 0️⃣ LOGIN / REGISTER -->
+
         <Tab text="Login / Register" closable="false">
             <VBox spacing="8" style="-fx-padding: 20;">
                 <GridPane hgap="5" vgap="5">
@@ -29,11 +29,11 @@
             </VBox>
         </Tab>
 
-        <!-- 1️⃣ UPLOAD XML -->
+
         <Tab text="Upload XML" fx:id="uploadTab" closable="false">
             <VBox spacing="8" style="-fx-padding: 20;">
 
-                <!-- non‑visual object -->
+
                 <fx:define>
                     <ToggleGroup fx:id="schemaToggle"/>
                 </fx:define>
@@ -51,16 +51,16 @@
             </VBox>
         </Tab>
 
-        <!-- 2️⃣ PRODUCTS CRUD -->
+
         <Tab text="Products" fx:id="crudTab" closable="false">
             <BorderPane style="-fx-padding: 10;">
 
-                <!-- centre -->
+
                 <center>
                     <TableView fx:id="table"/>
                 </center>
 
-                <!-- right -->
+
                 <right>
                     <VBox spacing="5">
                         <Button text="Refresh"        onAction="#loadAll"       maxWidth="Infinity"/>
@@ -68,7 +68,7 @@
                         <Button text="Add…"           onAction="#showAddDialog" maxWidth="Infinity"/>
                         <Button text="Edit…"          onAction="#showEditDialog" maxWidth="Infinity"/>
                         <Button text="Delete"         onAction="#handleDelete"  maxWidth="Infinity"/>
-                        <Button text="Seed 20 demo products"
+                        <Button text="Seed 10 demo products"
                                 onAction="#handleSeed"
                                 maxWidth="Infinity"/>
                     </VBox>
@@ -79,7 +79,6 @@
             </BorderPane>
         </Tab>
 
-        <!-- 3️⃣ SOAP SEARCH -->
         <Tab text="Search (SOAP)" closable="false">
             <VBox spacing="8" style="-fx-padding: 20;">
                 <HBox spacing="5">
@@ -90,7 +89,7 @@
             </VBox>
         </Tab>
 
-        <!-- 4️⃣ WEATHER -->
+
         <Tab text="Weather (XML‑RPC)" closable="false">
             <VBox spacing="8" style="-fx-padding: 20;">
                 <HBox spacing="5">

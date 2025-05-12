@@ -19,7 +19,7 @@ public class AliproductController {
         this.service = service;
     }
 
-    /** XSD-based upload */
+
     @PostMapping("/upload/xsd")
     public ResponseEntity<?> uploadXsd(@RequestParam("file") MultipartFile file) throws IOException {
         List<String> errors = service.validateAndSaveXsd(file);
@@ -29,7 +29,7 @@ public class AliproductController {
         return ResponseEntity.ok(Map.of("message", "File validated and saved."));
     }
 
-    /** RNG-based upload */
+
     @PostMapping("/upload/rng")
     public ResponseEntity<?> uploadRng(@RequestParam("file") MultipartFile file) throws IOException {
         List<String> errors = service.validateAndSaveRng(file);

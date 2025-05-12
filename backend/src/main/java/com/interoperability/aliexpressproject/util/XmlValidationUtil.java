@@ -16,19 +16,16 @@ import java.util.List;
 @Component
 public class XmlValidationUtil {
 
-    // ← your single-product XSD (place under src/main/resources/xsd/aliproduct.xsd)
+
     private static final String XSD_PATH = "xsd/aliproduct.xsd";
 
-    // ← your RelaxNG grammar (place under src/main/resources/rng/aliproduct.rng)
+
     private static final String RNG_PATH = "rng/aliproduct.rng";
 
     private static final String RNG_NS      = "http://relaxng.org/ns/structure/1.0";
     private static final String RNG_FACTORY = "com.thaiopensource.relaxng.jaxp.XMLSyntaxSchemaFactory";
 
-    /**
-     * Validates the incoming XML stream against either the XSD or RNG.
-     * Returns a (possibly empty) list of error messages.
-     */
+
     public List<String> validateXml(InputStream xmlStream, boolean useXsd) {
         List<String> errors = new ArrayList<>();
         try {
@@ -36,7 +33,7 @@ public class XmlValidationUtil {
                     ? SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI)
                     : SchemaFactory.newInstance(RNG_NS, RNG_FACTORY, getClass().getClassLoader());
 
-            // pick the correct schema file
+
             String schemaPath = useXsd ? XSD_PATH : RNG_PATH;
             InputStream schemaStream = getClass().getClassLoader().getResourceAsStream(schemaPath);
             if (schemaStream == null) {
@@ -47,7 +44,7 @@ public class XmlValidationUtil {
             Schema schema    = factory.newSchema(new StreamSource(schemaStream));
             Validator validator = schema.newValidator();
             validator.setErrorHandler(new ErrorHandler() {
-                public void warning(SAXParseException e) { /* ignore */ }
+                public void warning(SAXParseException e) {  }
                 public void error(SAXParseException   e) { errors.add(e.getMessage()); }
                 public void fatalError(SAXParseException e) { errors.add(e.getMessage()); }
             });
@@ -58,13 +55,13 @@ public class XmlValidationUtil {
         return errors;
     }
 
-    /** Convenience for XSD */
+
     public boolean validateAgainstXsd(InputStream xml, List<String> errors) {
         errors.addAll(validateXml(xml, true));
         return errors.isEmpty();
     }
 
-    /** Convenience for RNG */
+
     public boolean validateAgainstRng(InputStream xml, List<String> errors) {
         errors.addAll(validateXml(xml, false));
         return errors.isEmpty();

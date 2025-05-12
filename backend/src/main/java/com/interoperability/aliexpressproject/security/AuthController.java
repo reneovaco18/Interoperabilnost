@@ -20,7 +20,7 @@ public class AuthController {
         this.store = store;
     }
 
-    /* ─────────────────────────  REGISTRATION  ───────────────────────── */
+
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestParam String username,
@@ -36,7 +36,7 @@ public class AuthController {
         return ResponseEntity.ok(Map.of("message", "User created – now log in"));
     }
 
-    /* ─────────────────────────────  LOGIN  ───────────────────────────── */
+
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestParam String username,
@@ -53,7 +53,7 @@ public class AuthController {
         ));
     }
 
-    /* ───────────────────────────  REFRESH  ──────────────────────────── */
+
 
     @PostMapping("/refresh")
     public ResponseEntity<?> refresh(@RequestParam String refreshToken) {

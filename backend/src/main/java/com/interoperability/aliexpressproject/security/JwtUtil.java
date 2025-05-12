@@ -48,7 +48,7 @@ public class JwtUtil {
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
-        // (you could also check claims.get("type") here if you want to distinguish refresh vs access)
+
         return claims.getSubject();
     }
 }

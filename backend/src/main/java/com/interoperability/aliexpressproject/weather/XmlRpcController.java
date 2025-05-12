@@ -25,7 +25,7 @@ public class XmlRpcController {
 
     public XmlRpcController(WeatherService weatherService) {
         this.weatherService = weatherService;
-        // ensure declaration + raw format
+
         Format fmt = Format.getRawFormat()
                 .setOmitDeclaration(false)
                 .setEncoding("UTF-8");
@@ -34,13 +34,13 @@ public class XmlRpcController {
 
     @PostMapping(value = "/xmlrpc", consumes = "text/xml", produces = "text/xml")
     public void handleXmlRpc(HttpServletRequest req, HttpServletResponse resp) throws Exception {
-        // 1) read incoming XML-RPC body
+
         String xmlIn;
         try (InputStream is = req.getInputStream()) {
             xmlIn = new String(is.readAllBytes(), resp.getCharacterEncoding());
         }
 
-        // 2) parse methodCall → extract <string> term
+
         Document reqDoc = saxBuilder.build(new StringReader(xmlIn));
         Element stringEl = reqDoc.getRootElement()
                 .getChild("params")
@@ -49,10 +49,10 @@ public class XmlRpcController {
                 .getChild("string");
         String term = stringEl.getText().trim();
 
-        // 3) query service
+
         Map<String, String> results = weatherService.getTemperature(term);
 
-        // 4) build <methodResponse>
+
         Document resDoc = new Document();
         Element methodResponse = new Element("methodResponse");
         resDoc.setRootElement(methodResponse);
@@ -69,7 +69,7 @@ public class XmlRpcController {
         Element struct = new Element("struct");
         value.addContent(struct);
 
-        // each city → temperature
+
         for (Map.Entry<String, String> e : results.entrySet()) {
             Element member = new Element("member");
             struct.addContent(member);
@@ -81,7 +81,7 @@ public class XmlRpcController {
             member.addContent(memberValue);
         }
 
-        // 5) write back
+
         resp.setStatus(200);
         resp.setContentType("text/xml;charset=UTF-8");
         try (OutputStream os = resp.getOutputStream()) {

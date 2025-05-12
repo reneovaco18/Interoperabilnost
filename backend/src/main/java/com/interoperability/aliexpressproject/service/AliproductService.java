@@ -17,7 +17,7 @@ import java.util.*;
 @Service
 public class AliproductService {
 
-    // ← here’s your single storage dir for both XSD and RNG uploads
+
     private static final Path DIR = Paths.get("data", "aliproducts");
 
     private final JAXBContext       jaxbCtx;
@@ -26,24 +26,24 @@ public class AliproductService {
     public AliproductService(XmlValidationUtil validator) throws JAXBException, IOException {
         this.validator = validator;
         this.jaxbCtx   = JAXBContext.newInstance(Aliproduct.class);
-        // create data/aliproducts if not already present:
+
         Files.createDirectories(DIR);
     }
 
-    /** Called by controller for XSD-based upload */
+
     public List<String> validateAndSaveXsd(MultipartFile f) throws IOException {
         return validateThenPersist(f, true);
     }
 
-    /** Called by controller for RNG-based upload */
+
     public List<String> validateAndSaveRng(MultipartFile f) throws IOException {
         return validateThenPersist(f, false);
     }
 
-    /** Shared logic: validate → unmarshal → set/generate ID → marshal to file */
+
     private List<String> validateThenPersist(MultipartFile f, boolean useXsd) throws IOException {
         List<String> errors = new ArrayList<>();
-        // 1) validation
+
         try (InputStream in = f.getInputStream()) {
             boolean ok = useXsd
                     ? validator.validateAgainstXsd(in, errors)
@@ -51,7 +51,7 @@ public class AliproductService {
             if (!ok) return errors;
         }
 
-        // 2) unmarshal, assign/generate ID, save
+
         try (InputStream in = f.getInputStream()) {
             Unmarshaller um = jaxbCtx.createUnmarshaller();
             Aliproduct prod = (Aliproduct) um.unmarshal(in);

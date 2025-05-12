@@ -1,4 +1,4 @@
-// src/main/java/com/interoperability/aliexpressproject/config/CrudSecurityConfig.java
+
 package com.interoperability.aliexpressproject.config;
 
 import com.interoperability.aliexpressproject.security.JwtFilter;
@@ -18,17 +18,14 @@ public class CrudSecurityConfig {
         this.jwtFilter = jwtFilter;
     }
 
-    /**
-     * Chain #2: secures all /api/aliproducts/** endpoints with JWT.
-     * Must run after the “publicChain” (Order 1) but before the HTTP-Basic chain (lowest).
-     */
+
     @Bean
     @Order(2)
     public SecurityFilterChain crudChain(HttpSecurity http) throws Exception {
         http
                 .securityMatcher("/api/aliproducts/**")
                 .csrf(csrf -> csrf.disable())
-                // insert your JwtFilter so it extracts the user from the Bearer token
+
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
                         .anyRequest().authenticated()

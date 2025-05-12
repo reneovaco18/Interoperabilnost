@@ -38,7 +38,7 @@ public class JwtFilter extends OncePerRequestFilter {
                         user, null, AuthorityUtils.NO_AUTHORITIES);
                 SecurityContextHolder.getContext().setAuthentication(auth);
             } catch (JwtException e) {
-                // invalid token → leave unauthenticated
+
             }
         }
         chain.doFilter(req, res);

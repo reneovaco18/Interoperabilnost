@@ -5,10 +5,10 @@
         targetNamespace="http://interoperability.com/aliproduct"
         elementFormDefault="qualified">
 
-    <!-- now reference the type in the tns namespace -->
+
     <xs:element name="aliproduct" type="tns:AliproductType"/>
 
-    <!-- this complexType is automatically in the tns namespace -->
+
     <xs:complexType name="AliproductType">
         <xs:sequence>
             <xs:element name="id"       type="xs:string"   minOccurs="0"/>

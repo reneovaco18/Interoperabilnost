@@ -10,12 +10,19 @@ import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 import javafx.stage.FileChooser;
 import org.w3c.dom.*;
+import org.xml.sax.InputSource;
+
 import javax.xml.parsers.*;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 
 import java.io.StringReader;
 
 import java.io.File;
 import java.io.StringReader;
+import java.io.StringWriter;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.net.URLEncoder;
@@ -26,10 +33,9 @@ import java.net.http.HttpRequest.BodyPublishers;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
-/** Java‑FX controller – now with: client‑side validation, Find‑by‑ID, parsed temp */
 public class MainController {
 
-    /* ── FXML wired ───────────────────────────────── */
+
     @FXML
     private TextField userField, passField;
     @FXML
@@ -41,7 +47,7 @@ public class MainController {
     @FXML
     private TextArea uploadResult, soapResult, weatherArea;
     @FXML
-    private TextField tempField;          // new
+    private TextField tempField;
     @FXML
     private TableView<Map<String, String>> table;
     @FXML
@@ -49,12 +55,12 @@ public class MainController {
     @FXML
     private TextField searchField, cityField;
 
-    /* ── HTTP helpers ─────────────────────────────── */
+
     private final HttpClient http = HttpClient.newHttpClient();
     private final ObjectMapper mapper = new ObjectMapper();
     private String accessToken;
 
-    /* ── init ─────────────────────────────────────── */
+
     @FXML
     private void initialize() {
         uploadTab.setDisable(true);
@@ -69,7 +75,7 @@ public class MainController {
         }
     }
 
-    /* ── ADMIN SEED ──────────────────────────────── */
+
     @FXML
     private void handleSeed() {
         try {
@@ -86,11 +92,11 @@ public class MainController {
         }
     }
 
-    /* ──────────────────────────  ADMIN SEED  ─────────────────────────── */
 
 
 
-    /* ─────────────────────────  REGISTER / LOGIN  ────────────────────── */
+
+
 
     @FXML
     private void handleRegister() {
@@ -140,7 +146,7 @@ public class MainController {
         }
     }
 
-    /* ─────────────────────────────  UPLOAD XML  ───────────────────────── */
+
 
     @FXML
     private void handleUpload() {
@@ -167,7 +173,7 @@ public class MainController {
         }
     }
 
-    /* ────────────────────────────  CRUD TABLE  ───────────────────────── */
+
 
     @FXML
     private void loadAll() {
@@ -190,7 +196,7 @@ public class MainController {
         );
     }
 
-    /* ------------  NEW: find by ID ---------------- */
+
     @FXML
     private void showFindDialog() {
         TextInputDialog dlg = new TextInputDialog();
@@ -210,9 +216,9 @@ public class MainController {
             );
         });
     }
-    /* add / edit / delete helpers – unchanged except they already handled imageUrl+rating */
 
-    /* add / edit / delete – now with client‑side validation */
+
+
     @FXML
     private void showAddDialog() {
         editDialog(null);
@@ -250,7 +256,7 @@ public class MainController {
                 : null);
 
         dlg.showAndWait().ifPresent(vals -> {
-            /* basic validation */
+
             List<String> errs = new ArrayList<>();
             if (vals.get("title").isEmpty()) errs.add("Title is required");
             if (vals.get("imageUrl").isEmpty()) errs.add("Image URL is required");
@@ -302,7 +308,7 @@ public class MainController {
         }
     }
 
-    /* ────────────────────────────  SOAP SEARCH  ──────────────────────── */
+
 
     @FXML
     private void handleSoapSearch() {
@@ -320,14 +326,15 @@ public class MainController {
 
         try {
             HttpRequest req = HttpRequest.newBuilder()
-                    .uri(URI.create("http://localhost:8100/services"))
+                    .uri(URI.create("http://localhost:8100/services/"))
+
                     .header("Content-Type","text/xml")
                     .POST(BodyPublishers.ofString(envelope))
                     .build();
 
             HttpResponse<String> r = http.send(req, HttpResponse.BodyHandlers.ofString());
 
-            /* show status line + safe pretty */
+
             soapResult.setText("HTTP " + r.statusCode() + "\n\n" + pretty(r.body()));
 
         } catch (Exception ex) {
@@ -336,7 +343,7 @@ public class MainController {
     }
 
 
-    /* ────────────────────────  WEATHER (XML‑RPC)  ────────────────────── */
+
 
     @FXML
     private void handleWeather() {
@@ -364,12 +371,10 @@ public class MainController {
         }
     }
 
-    /* ─────────────────────────────  HELPERS  ─────────────────────────── */
 
-    /**
-     * Returns the first &lt;string&gt; value inside the XML‑RPC response, e.g. “19.8°C”.
-     * If none found or XML is malformed, returns an empty string.
-     */
+
+
+
     private String extractFirstTemp(String xml) {
         try {
             DocumentBuilderFactory f = DocumentBuilderFactory.newInstance();
@@ -382,30 +387,39 @@ public class MainController {
         }
     }
 
-    /**
-     * Pretty‑prints an XML string using only JDK classes.
-     * If the input is not well‑formed, returns it unchanged.
-     */
-    private String pretty(String rawXml) {
-        if (rawXml == null || rawXml.trim().isEmpty()) return rawXml;   //  ← NEW
-        try {
-            var src = new javax.xml.transform.stream.StreamSource(
-                    new StringReader(rawXml));
-            var tf = javax.xml.transform.TransformerFactory.newInstance();
-            try {
-                tf.setAttribute("indent-number", 2);
-            } catch (Exception ignored) {
-            }
-            var tr = tf.newTransformer();
-            tr.setOutputProperty(javax.xml.transform.OutputKeys.INDENT, "yes");
 
-            var sw = new java.io.StringWriter();
-            tr.transform(src, new javax.xml.transform.stream.StreamResult(sw));
+    private String pretty(String rawXml) {
+        if (rawXml == null || rawXml.isBlank()) {
+            return rawXml;
+        }
+        try {
+
+            var dbf = DocumentBuilderFactory.newInstance();
+            dbf.setNamespaceAware(true);
+            var db = dbf.newDocumentBuilder();
+            var doc = db.parse(new InputSource(new StringReader(rawXml)));
+
+
+            var tf = TransformerFactory.newInstance();
+            var transformer = tf.newTransformer();
+            transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
+            transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no");
+            transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+
+            transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
+
+
+            var sw = new StringWriter();
+            transformer.transform(new DOMSource(doc), new StreamResult(sw));
             return sw.toString();
+
+
         } catch (Exception e) {
+
             return rawXml;
         }
     }
+
 
     private void showPopup(String msg) {
         Platform.runLater(() ->
@@ -446,14 +460,14 @@ public class MainController {
         }
     }
 
-    /* ─────────────────────────  Multipart helper  ────────────────────── */
 
-    static class MultipartBodyBuilder {                  //  ✅ now static
+
+    static class MultipartBodyBuilder {
         private static final String BOUNDARY = "----AliExpressBoundary";
         private final List<byte[]> parts = new ArrayList<>();
 
         static MultipartBodyBuilder builder() {
-            return new MultipartBodyBuilder();           //  ← no outer ref needed
+            return new MultipartBodyBuilder();
         }
 
         MultipartBodyBuilder filePart(String name, File f) throws Exception {

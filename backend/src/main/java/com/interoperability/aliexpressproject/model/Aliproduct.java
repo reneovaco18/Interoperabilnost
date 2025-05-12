@@ -5,14 +5,14 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 
-@Data                     // Lombok → getters, setters, toString…
-@NoArgsConstructor        // Lombok → no‑arg ctor (required by JAXB)
+@Data
+@NoArgsConstructor
 @XmlRootElement(name = "aliproduct", namespace = "http://interoperability.com/aliproduct")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class Aliproduct {
 
     @XmlElement(namespace = "http://interoperability.com/aliproduct")
-    private String id;          // optional – we auto‑generate if absent
+    private String id;
 
     @XmlElement(namespace = "http://interoperability.com/aliproduct", required = true)
     private String title;

@@ -1,4 +1,4 @@
-// src/main/java/hr/java/interoper/clientapp/ClientApplication.java
+
 package hr.java.interoper.clientapp;
 
 import javafx.application.Application;

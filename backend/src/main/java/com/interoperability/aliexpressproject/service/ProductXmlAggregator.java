@@ -14,10 +14,7 @@ import java.nio.file.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * Builds one XML document <products>…</products>
- * from every file in data/aliproducts/.
- */
+
 @Service
 public class ProductXmlAggregator {
 
@@ -26,7 +23,7 @@ public class ProductXmlAggregator {
 
     public ProductXmlAggregator() throws JAXBException {
         this.jaxb = JAXBContext.newInstance(Aliproduct.class);
-        // ensure the directory exists
+
         try {
             Files.createDirectories(DIR);
         } catch (IOException e) {
@@ -34,7 +31,7 @@ public class ProductXmlAggregator {
         }
     }
 
-    /** Returns XML string containing all products. */
+
     public String buildXml() throws IOException, JAXBException {
         List<Path> files = Files.list(DIR)
                 .filter(p -> p.toString().endsWith(".xml"))

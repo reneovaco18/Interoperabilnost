@@ -12,7 +12,6 @@
     <xs:element name="getByTitleResponse">
         <xs:complexType>
             <xs:sequence>
-                <!-- ✅ Move specific element ABOVE wildcard -->
                 <xs:element name="validationError" type="xs:string"
                             minOccurs="0" maxOccurs="unbounded"/>
                 <xs:any processContents="lax" minOccurs="0" maxOccurs="unbounded"/>

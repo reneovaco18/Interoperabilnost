@@ -24,19 +24,20 @@ repositories {
 
 dependencies {
     /* ── Spring stack ─────────────────────────────────────────────── */
-    implementation 'org.springframework.boot:spring-boot-starter-web'            // REST API
-    implementation 'org.springframework.boot:spring-boot-starter-web-services'   // SOAP (Spring-WS)
-    implementation 'org.springframework.boot:spring-boot-starter-security'       // Basic-Auth → later JWT
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-web-services'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
 
-    // build.gradle of the backend module
-    implementation 'org.apache.httpcomponents.client5:httpclient5-fluent:5.2.1'   // <‑‑ you call Request.get(…)
+
+    implementation 'org.apache.httpcomponents.client5:httpclient5-fluent:5.2.1'
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.3'
 
     implementation 'org.springframework.security:spring-security-crypto:6.1.2'
+    implementation 'org.asynchttpclient:async-http-client:2.12.4'
 
-    /* ── WebClient & XML parsing ─────────────────────────────────── */
-    implementation 'org.springframework.boot:spring-boot-starter-webflux'  // for RapidAPI HTTP + reactive stack
-    implementation 'org.jdom:jdom2:2.0.6'                                // convenient XML parsing
+    /* ──    WebClient & XML parsing ─────────────────────────────────── */
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+    implementation 'org.jdom:jdom2:2.0.6'
 
     /* ── WSDL generator for Spring-WS ─────────────────────────────── */
     implementation 'wsdl4j:wsdl4j:1.6.3'
@@ -47,7 +48,7 @@ dependencies {
 
     /* ── Relax-NG validation (Jing) ───────────────────────────────── */
     implementation('com.thaiopensource:jing:20091111') {
-        // exclude Saxon to avoid conflicts with Spring-WS WSDL generation
+
         exclude group: 'net.sf.saxon', module: 'saxon'
     }
     implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
@@ -59,14 +60,14 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok:1.18.30'
 
     /* ── Testing ──────────────────────────────────────────────────── */
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'     // JUnit5, MockMvc, Mockito, JSON-path
-    testImplementation 'org.springframework.security:spring-security-test'     // Security filter/mocks
-    testImplementation 'org.xmlunit:xmlunit-core:2.9.1'                      // XML assertion helpers
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.security:spring-security-test'
+    testImplementation 'org.xmlunit:xmlunit-core:2.9.1'
 }
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding    = 'UTF-8'
-    options.compilerArgs += ['-parameters']   // better Spring reflection
+    options.compilerArgs += ['-parameters']
 }
 
 test {

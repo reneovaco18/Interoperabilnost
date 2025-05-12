@@ -21,8 +21,8 @@ dependencies {
     implementation "org.openjfx:javafx-controls:20"
     implementation "org.openjfx:javafx-fxml:20"
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.3'
-    implementation 'org.apache.httpcomponents.client5:httpclient5:5.2.1' // only if you prefer Apache; current code uses JDK HttpClient
-    /* ── add this ── */
+    implementation 'org.apache.httpcomponents.client5:httpclient5:5.2.1'
+
     implementation 'org.jdom:jdom2:2.0.6'
     // JSON parsing
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.3'
