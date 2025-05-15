@@ -23,6 +23,11 @@
                             HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
                     <Button text="Log in"   onAction="#handleLogin"
                             HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                    <Button text="Refresh Token"
+                            onAction="#handleRefresh"
+                            HBox.hgrow="ALWAYS"
+                            maxWidth="Infinity"/>
+
                 </HBox>
 
                 <Label fx:id="loginStatus"/>
@@ -51,7 +56,19 @@
             </VBox>
         </Tab>
 
+        <Tab text="Validate XML (JAXB)" fx:id="validateTab" closable="false">
+            <VBox spacing="8" style="-fx-padding: 20;">
+                <Button
+                        text="Pick &amp; Validate File…"
+                        onAction="#handleValidateJaxb"
+                        maxWidth="Infinity" />
 
+                <TextArea
+                        fx:id="validateResult"
+                        editable="false"
+                        prefRowCount="6" />
+            </VBox>
+        </Tab>
         <Tab text="Products" fx:id="crudTab" closable="false">
             <BorderPane style="-fx-padding: 10;">
 

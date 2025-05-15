@@ -40,9 +40,14 @@ public class MainController {
     private TextField userField, passField;
     @FXML
     private Label loginStatus;
+    @FXML
+    private Tab validateTab;
 
     @FXML
+    private TextArea validateResult;
+    @FXML
     private ToggleGroup schemaToggle;
+
 
     @FXML
     private TextArea uploadResult, soapResult, weatherArea;
@@ -59,7 +64,7 @@ public class MainController {
     private final HttpClient http = HttpClient.newHttpClient();
     private final ObjectMapper mapper = new ObjectMapper();
     private String accessToken;
-
+    private String refreshToken;
 
     @FXML
     private void initialize() {
@@ -92,7 +97,33 @@ public class MainController {
         }
     }
 
+    @FXML
+    private void handleValidateJaxb() {
 
+        FileChooser fc = new FileChooser();
+        fc.getExtensionFilters().add(
+                new FileChooser.ExtensionFilter("XML file", "*.xml")
+        );
+        File f = fc.showOpenDialog(null);
+        if (f == null) return;
+
+        try {
+
+            java.net.http.HttpRequest req = MultipartBodyBuilder.builder()
+                    .filePart("file", f)
+                    .build("http://localhost:8100/api/aliproducts/validate/jaxb", accessToken);
+
+
+            HttpResponse<String> r = http.send(
+                    req, HttpResponse.BodyHandlers.ofString()
+            );
+
+
+            validateResult.setText("HTTP " + r.statusCode() + "\n" + r.body());
+        } catch (Exception ex) {
+            validateResult.setText("⚠ " + ex.getMessage());
+        }
+    }
 
 
 
@@ -134,15 +165,56 @@ public class MainController {
 
             HttpResponse<String> r = http.send(req, HttpResponse.BodyHandlers.ofString());
             if (r.statusCode() == 200) {
-                accessToken = mapper.readTree(r.body()).get("accessToken").asText();
+                JsonNode body = mapper.readTree(r.body());
+                accessToken  = body.get("accessToken").asText();
+                refreshToken = body.get("refreshToken").asText();
                 loginStatus.setText("✅ logged in");
                 uploadTab.setDisable(false);
                 crudTab.setDisable(false);
+
             } else {
                 loginStatus.setText("❌ HTTP " + r.statusCode());
             }
         } catch (Exception ex) {
             loginStatus.setText("⚠ " + ex);
+        }
+    }
+
+    @FXML
+    private void handleRefresh() {
+        if (refreshToken == null) {
+            showPopup("No refresh token—please log in first.");
+            return;
+        }
+
+        try {
+            String form = "refreshToken=" +
+                    URLEncoder.encode(refreshToken, StandardCharsets.UTF_8);
+
+            HttpRequest req = HttpRequest.newBuilder()
+                    .uri(URI.create("http://localhost:8100/auth/refresh"))
+                    .header("Content-Type", "application/x-www-form-urlencoded")
+                    .POST(HttpRequest.BodyPublishers.ofString(form))
+                    .build();
+
+            HttpResponse<String> r = http.send(req, HttpResponse.BodyHandlers.ofString());
+            if (r.statusCode() == 200) {
+
+                String newAccess = mapper.readTree(r.body()).get("accessToken").asText();
+                accessToken = newAccess;
+
+
+                loginStatus.setText(
+                        "🔄 Token refreshed!\n" +
+                                "New Access Token:  "  + accessToken  + "\n" +
+                                "Your Refresh Token: " + refreshToken
+                );
+            } else {
+                loginStatus.setText("❌ Refresh failed: HTTP " + r.statusCode());
+            }
+
+        } catch (Exception ex) {
+            showPopup("Refresh error: " + ex.getMessage());
         }
     }
 
@@ -350,26 +422,62 @@ public class MainController {
         String city = cityField.getText().trim();
         if (city.isEmpty()) return;
 
+
         String call = """
-                <methodCall><methodName>getTemperature</methodName>
-                  <params><param><value><string>%s</string></value></param></params>
-                </methodCall>""".formatted(city.replace("&", "&amp;"));
+        <methodCall><methodName>getTemperature</methodName>
+          <params><param><value><string>%s</string></value></param></params>
+        </methodCall>""".formatted(city.replace("&", "&amp;"));
 
         try {
+
             HttpRequest req = HttpRequest.newBuilder()
                     .uri(URI.create("http://localhost:8100/xmlrpc"))
                     .header("Content-Type", "text/xml")
-                    .POST(BodyPublishers.ofString(call))
+                    .POST(HttpRequest.BodyPublishers.ofString(call))
                     .build();
-
             HttpResponse<String> r = http.send(req, HttpResponse.BodyHandlers.ofString());
-            weatherArea.setText("HTTP " + r.statusCode() + "\n\n" + r.body());
-            tempField.setText(extractFirstTemp(r.body()));          //  ✅ now compiles
+
+
+            DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+            DocumentBuilder db = dbf.newDocumentBuilder();
+            Document doc = db.parse(new InputSource(new StringReader(r.body())));
+
+
+            NodeList nameNodes = doc.getElementsByTagName("name");
+            NodeList tempNodes = doc.getElementsByTagName("string");
+
+
+            LinkedHashMap<String,String> results = new LinkedHashMap<>();
+            int count = Math.min(nameNodes.getLength(), tempNodes.getLength());
+            for (int i = 0; i < count; i++) {
+                String cityName = nameNodes.item(i).getTextContent();
+                String temperature = tempNodes.item(i).getTextContent();
+                results.put(cityName, temperature);
+            }
+
+
+            StringBuilder sb = new StringBuilder();
+            for (var entry : results.entrySet()) {
+                sb.append(entry.getKey())
+                        .append(": ")
+                        .append(entry.getValue())
+                        .append("\n");
+            }
+            weatherArea.setText("HTTP " + r.statusCode() + "\n\n" + sb);
+
+
+            if (!results.isEmpty()) {
+                tempField.setText(results.values().iterator().next());
+            } else {
+                tempField.clear();
+            }
+
         } catch (Exception ex) {
-            weatherArea.setText("⚠ " + ex);
+            weatherArea.setText("⚠ " + ex.getMessage());
             tempField.clear();
         }
     }
+
 
 
 

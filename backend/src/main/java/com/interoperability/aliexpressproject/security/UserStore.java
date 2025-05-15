@@ -1,4 +1,4 @@
-// src/main/java/com/interoperability/aliexpressproject/security/UserStore.java
+
 package com.interoperability.aliexpressproject.security;
 
 import jakarta.annotation.PostConstruct;
@@ -15,7 +15,7 @@ public class UserStore {
     private final Map<String,String> users = new ConcurrentHashMap<>();
     private final BCryptPasswordEncoder enc = new BCryptPasswordEncoder();
 
-    /** Pre‑seed one demo account so the TA can test instantly. */
+
     @PostConstruct
     void init() {
         addUser("demo", "demo");

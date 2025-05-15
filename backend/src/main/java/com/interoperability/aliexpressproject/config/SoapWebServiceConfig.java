@@ -25,7 +25,7 @@ public class SoapWebServiceConfig {
         return new ServletRegistrationBean<>(servlet, "/services/*");
     }
 
-    @Bean   // WSDL = http://localhost:8100/services/products.wsdl
+    @Bean
     public DefaultWsdl11Definition productsWsdl(XsdSchema productsSchema) {
         DefaultWsdl11Definition def = new DefaultWsdl11Definition();
         def.setPortTypeName("ProductsPort");
