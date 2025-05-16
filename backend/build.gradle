@@ -44,6 +44,7 @@ dependencies {
     implementation 'jakarta.xml.bind:jakarta.xml.bind-api:4.0.0'
     runtimeOnly   'org.glassfish.jaxb:jaxb-runtime:4.0.4'
 
+    implementation 'org.asynchttpclient:async-http-client:2.12.3'
 
     implementation('com.thaiopensource:jing:20091111') {
 

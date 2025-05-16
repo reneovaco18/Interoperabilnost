@@ -3,7 +3,12 @@ plugins {
     id 'application'
     id 'org.openjfx.javafxplugin' version '0.0.13'
 }
+java {
+    toolchain {
 
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
 group = 'com.interoperability'
 version = '1.0-SNAPSHOT'
 
