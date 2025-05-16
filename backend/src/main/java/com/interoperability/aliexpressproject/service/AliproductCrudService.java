@@ -26,23 +26,23 @@ public class AliproductCrudService {
     public AliproductCrudService() throws JAXBException, IOException {
         this.jaxb = JAXBContext.newInstance(Aliproduct.class);
         Files.createDirectories(DIR);
-    }
-
-    public List<Aliproduct> findAll() throws JAXBException, IOException {
-        Unmarshaller u = jaxb.createUnmarshaller();
-        try (var files = Files.list(DIR)) {
-            return files
-                    .filter(p -> p.toString().endsWith(".xml"))
-                    .map(p -> {
-                        try {
-                            return (Aliproduct) u.unmarshal(p.toFile());
-                        } catch (Exception e) {
-                            throw new UncheckedIOException(new IOException(e));
-                        }
-                    })
-                    .collect(Collectors.toList());
         }
-    }
+
+        public List<Aliproduct> findAll() throws JAXBException, IOException {
+            Unmarshaller u = jaxb.createUnmarshaller();
+            try (var files = Files.list(DIR)) {
+                return files
+                        .filter(p -> p.toString().endsWith(".xml"))
+                        .map(p -> {
+                            try {
+                                return (Aliproduct) u.unmarshal(p.toFile());
+                            } catch (Exception e) {
+                                throw new UncheckedIOException(new IOException(e));
+                            }
+                        })
+                        .collect(Collectors.toList());
+            }
+        }
 
     public Optional<Aliproduct> findById(String id) throws JAXBException {
         Path f = DIR.resolve(id + ".xml");

@@ -11,22 +11,29 @@ import org.springframework.ws.wsdl.wsdl11.DefaultWsdl11Definition;
 import org.springframework.xml.xsd.SimpleXsdSchema;
 import org.springframework.xml.xsd.XsdSchema;
 
-
-@Configuration @EnableWs
+@Configuration
+@EnableWs
 public class SoapWebServiceConfig {
 
     @Bean
     public ServletRegistrationBean<MessageDispatcherServlet> messageDispatcherServlet(
             ApplicationContext ctx) {
-
         MessageDispatcherServlet servlet = new MessageDispatcherServlet();
         servlet.setApplicationContext(ctx);
         servlet.setTransformWsdlLocations(true);
-        return new ServletRegistrationBean<>(servlet, "/services/*");
+
+
+        return new ServletRegistrationBean<>(
+                servlet,
+                "/services",
+                "/services/*"
+        );
     }
 
-    @Bean
-    public DefaultWsdl11Definition productsWsdl(XsdSchema productsSchema) {
+
+
+    @Bean(name = "services")
+    public DefaultWsdl11Definition servicesWsdl(XsdSchema productsSchema) {
         DefaultWsdl11Definition def = new DefaultWsdl11Definition();
         def.setPortTypeName("ProductsPort");
         def.setLocationUri("/services");
@@ -37,6 +44,8 @@ public class SoapWebServiceConfig {
 
     @Bean
     public XsdSchema productsSchema() {
-        return new SimpleXsdSchema(new ClassPathResource("wsdl/products.xsd"));
+        return new SimpleXsdSchema(
+                new ClassPathResource("wsdl/products.xsd"));
     }
 }
+
