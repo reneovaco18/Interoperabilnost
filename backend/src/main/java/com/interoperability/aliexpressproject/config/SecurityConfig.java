@@ -39,7 +39,8 @@ public class SecurityConfig {
                                 new AntPathRequestMatcher("/api/aliproducts/upload/xsd"),
                                 new AntPathRequestMatcher("/api/aliproducts/upload/rng"),
                                 new AntPathRequestMatcher("/xmlrpc"),
-                                new AntPathRequestMatcher("/admin/seed")
+                                new AntPathRequestMatcher("/admin/seed"),
+                                new AntPathRequestMatcher("/services/**")
                         ).permitAll()
 
 

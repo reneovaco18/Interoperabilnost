@@ -8,7 +8,7 @@ import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.stereotype.Component;
-import io.jsonwebtoken.JwtException;                          // ← add this
+import io.jsonwebtoken.JwtException;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 

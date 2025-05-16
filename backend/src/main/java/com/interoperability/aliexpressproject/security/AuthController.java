@@ -1,4 +1,4 @@
-// src/main/java/com/interoperability/aliexpressproject/security/AuthController.java
+
 package com.interoperability.aliexpressproject.security;
 
 import io.jsonwebtoken.JwtException;

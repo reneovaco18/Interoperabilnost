@@ -1,4 +1,4 @@
-// src/main/java/com/interoperability/aliexpressproject/weather/XmlRpcController.java
+
 package com.interoperability.aliexpressproject.weather;
 
 import jakarta.servlet.http.HttpServletRequest;
